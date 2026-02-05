@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Irregular Verbs Master</title>
+    <!-- PWA -->
+    <meta name="theme-color" content="#0f172a">
+    <link rel="manifest" href="data:application/manifest+json,{'name':'Irregular Verbs','short_name':'Verbs','display':'standalone','start_url':'.','background_color':'#0f172a','theme_color':'#0f172a'}">
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --accent: #818cf8;
+            --success: #4ade80;
+            --error: #fb7185;
+            --input-bg: rgba(0, 0, 0, 0.2);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        [data-theme="light"] {
+            --bg-gradient: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+            --glass-bg: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --text-main: #1e293b;
+            --text-dim: #64748b;
+            --accent: #4f46e5;
+            --input-bg: rgba(255, 255, 255, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Glassmorphism Styles */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 0.5px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Layout */
+        header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: -0.02em;
+            color: var(--accent);
+        }
+
+        main {
+            flex: 1;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Navigation Tabs */
+        nav {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            display: flex;
+            padding: 8px;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        nav button {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            padding: 12px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        nav button i { font-size: 1.2rem; }
+        nav button.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Quiz UI */
+        .quiz-card {
+            padding: 40px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .meaning-display {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .field-label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-align: left;
+            margin-bottom: 4px;
+            padding-left: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .verb-input {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            padding: 16px;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .verb-input:focus {
+            border-color: var(--accent);
+            background: var(--glass-bg);
+        }
+
+        .verb-input.correct {
+            border-color: var(--success);
+            background: rgba(74, 222, 128, 0.1);
+        }
+
+        /* Stats & Learning List */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-item {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+
+        .verb-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-bottom: 100px;
+        }
+
+        .group-header {
+            margin-top: 20px;
+            margin-bottom: 8px;
+            padding-left: 10px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .group-header::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--glass-border);
+        }
+
+        .verb-row {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .verb-row .info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .verb-row .meaning { font-weight: 700; }
+        .verb-row .forms {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+
+        /* Success Glow Animation */
+        .glow-success {
+            animation: glow 0.6s ease-out;
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 0 rgba(74, 222, 128, 0); }
+            50% { box-shadow: 0 0 40px rgba(74, 222, 128, 0.4); }
+            100% { box-shadow: 0 0 0 rgba(74, 222, 128, 0); }
+        }
+
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <header>
+        <div class="logo">VERB MASTER</div>
+        <button class="theme-toggle" id="themeBtn" aria-label="Toggle Theme">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+    </header>
+
+    <main>
+        <!-- Quiz Screen -->
+        <section id="quizScreen" class="screen active">
+            <div class="quiz-card glass-panel" id="quizCard">
+                <div class="meaning-display" id="currentMeaning">---</div>
+                
+                <div class="input-group">
+                    <div>
+                        <div class="field-label">Present</div>
+                        <input type="text" class="verb-input" id="inputBase" placeholder="現在形" spellcheck="false" autocomplete="off">
+                    </div>
+                    <div>
+                        <div class="field-label">Past</div>
+                        <input type="text" class="verb-input" id="inputPast" placeholder="過去形" spellcheck="false" autocomplete="off">
+                    </div>
+                    <div>
+                        <div class="field-label">Past Participle</div>
+                        <input type="text" class="verb-input" id="inputPastParticiple" placeholder="過去分詞" spellcheck="false" autocomplete="off">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- List Screen -->
+        <section id="listScreen" class="screen">
+            <div class="verb-list" id="verbList">
+                <!-- Grouped Verbs injected here -->
+            </div>
+        </section>
+
+        <!-- Stats Screen -->
+        <section id="statsScreen" class="screen">
+            <div class="stat-grid">
+                <div class="stat-item glass-panel">
+                    <div class="stat-value" id="statAttempts">0</div>
+                    <div class="stat-label">総回答数</div>
+                </div>
+                <div class="stat-item glass-panel">
+                    <div class="stat-value" id="statAccuracy">0%</div>
+                    <div class="stat-label">正答率</div>
+                </div>
+                <div class="stat-item glass-panel">
+                    <div class="stat-value" id="statStreak">0</div>
+                    <div class="stat-label">現在連勝</div>
+                </div>
+                <div class="stat-item glass-panel">
+                    <div class="stat-value" id="statMaxStreak">0</div>
+                    <div class="stat-label">最大連勝</div>
+                </div>
+            </div>
+            
+            <div style="margin-top:20px;">
+                <h3 style="margin: 10px 0; font-size: 0.9rem; color: var(--text-dim);">苦手な動詞 TOP 5</h3>
+                <div id="weakVerbsList" class="verb-list"></div>
+            </div>
+        </section>
+    </main>
+
+    <nav class="glass-panel">
+        <button onclick="showScreen('quiz')" id="nav-quiz" class="active">
+            <i class="fa-solid fa-pen-nib"></i>
+            <span>Test</span>
+        </button>
+        <button onclick="showScreen('list')" id="nav-list">
+            <i class="fa-solid fa-book"></i>
+            <span>List</span>
+        </button>
+        <button onclick="showScreen('stats')" id="nav-stats">
+            <i class="fa-solid fa-chart-simple"></i>
+            <span>Stats</span>
+        </button>
+    </nav>
+
+    <script>
+        // --- 動詞データ（グループ分け付き） ---
+        const VERBS = [
+            // AAA型
+            { meaning: "読む", base: "read", past: "read", pastParticiple: "read", type: "AAA" },
+            { meaning: "置く", base: "put", past: "put", pastParticiple: "put", type: "AAA" },
+            { meaning: "切る", base: "cut", past: "cut", pastParticiple: "cut", type: "AAA" },
+            
+            // ABA型
+            { meaning: "来る", base: "come", past: "came", pastParticiple: "come", type: "ABA" },
+            { meaning: "走る", base: "run", past: "ran", pastParticiple: "run", type: "ABA" },
+            { meaning: "なる", base: "become", past: "became", pastParticiple: "become", type: "ABA" },
+
+            // ABB型
+            { meaning: "持つ/食べる", base: "have", past: "had", pastParticiple: "had", type: "ABB" },
+            { meaning: "作る", base: "make", past: "made", pastParticiple: "made", type: "ABB" },
+            { meaning: "買う", base: "buy", past: "bought", pastParticiple: "bought", type: "ABB" },
+            { meaning: "教える", base: "teach", past: "taught", pastParticiple: "taught", type: "ABB" },
+            { meaning: "座る", base: "sit", past: "sat", pastParticiple: "sat", type: "ABB" },
+            { meaning: "眠る", base: "sleep", past: "slept", pastParticiple: "slept", type: "ABB" },
+            { meaning: "言う", base: "say", past: "said", pastParticiple: "said", type: "ABB" },
+            { meaning: "見つける", base: "find", past: "found", pastParticiple: "found", type: "ABB" },
+            { meaning: "聞く", base: "hear", past: "heard", pastParticiple: "heard", type: "ABB" },
+            { meaning: "立ち上がる", base: "stand", past: "stood", pastParticiple: "stood", type: "ABB" },
+            { meaning: "勝つ", base: "win", past: "won", pastParticiple: "won", type: "ABB" },
+
+            // ABC型
+            { meaning: "行く", base: "go", past: "went", pastParticiple: "gone", type: "ABC" },
+            { meaning: "食べる", base: "eat", past: "ate", pastParticiple: "eaten", type: "ABC" },
+            { meaning: "見る", base: "see", past: "saw", pastParticiple: "seen", type: "ABC" },
+            { meaning: "書く", base: "write", past: "wrote", pastParticiple: "written", type: "ABC" },
+            { meaning: "話す", base: "speak", past: "spoke", pastParticiple: "spoken", type: "ABC" },
+            { meaning: "与える", base: "give", past: "gave", pastParticiple: "given", type: "ABC" },
+            { meaning: "持っていく", base: "take", past: "took", pastParticiple: "taken", type: "ABC" },
+            { meaning: "知っている", base: "know", past: "knew", pastParticiple: "known" , type: "ABC" },
+            { meaning: "泳ぐ", base: "swim", past: "swam", pastParticiple: "swum", type: "ABC" },
+            { meaning: "歌う", base: "sing", past: "sang", pastParticiple: "sung", type: "ABC" },
+            { meaning: "飲む", base: "drink", past: "drank", pastParticiple: "drunk", type: "ABC" }
+        ];
+
+        // --- State Management ---
+        let currentVerb = null;
+        let shuffledQueue = [];
+        let stats = JSON.parse(localStorage.getItem('verbStats')) || {
+            totalAttempts: 0,
+            correctCount: 0,
+            currentStreak: 0,
+            maxStreak: 0,
+            weakVerbs: {}
+        };
+        let userSettings = JSON.parse(localStorage.getItem('verbSettings')) || { theme: 'dark' };
+
+        // --- DOM Elements ---
+        const inputs = {
+            base: document.getElementById('inputBase'),
+            past: document.getElementById('inputPast'),
+            pp: document.getElementById('inputPastParticiple')
+        };
+        const quizCard = document.getElementById('quizCard');
+
+        // --- Initialization ---
+        window.onload = () => {
+            applyTheme(userSettings.theme);
+            initQuiz();
+            renderVerbList();
+            updateStatsUI();
+
+            // Event Listeners for inputs
+            Object.values(inputs).forEach(input => {
+                input.oninput = checkAnswer;
+            });
+
+            document.getElementById('themeBtn').onclick = toggleTheme;
+        };
+
+        // --- Theme Engine ---
+        function applyTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            const icon = document.querySelector('#themeBtn i');
+            icon.className = theme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+            userSettings.theme = theme;
+            localStorage.setItem('verbSettings', JSON.stringify(userSettings));
+        }
+
+        function toggleTheme() {
+            const newTheme = userSettings.theme === 'dark' ? 'light' : 'dark';
+            applyTheme(newTheme);
+        }
+
+        // --- Quiz Logic ---
+        function initQuiz() {
+            if (shuffledQueue.length === 0) {
+                shuffledQueue = _.shuffle([...VERBS]);
+            }
+            currentVerb = shuffledQueue.pop();
+            document.getElementById('currentMeaning').textContent = currentVerb.meaning;
+            
+            // Reset inputs
+            Object.values(inputs).forEach(input => {
+                input.value = '';
+                input.className = 'verb-input';
+            });
+            inputs.base.focus();
+        }
+
+        function checkAnswer() {
+            const vBase = inputs.base.value.trim().toLowerCase();
+            const vPast = inputs.past.value.trim().toLowerCase();
+            const vPP = inputs.pp.value.trim().toLowerCase();
+
+            // Visual feedback for individual fields
+            if (vBase === currentVerb.base) inputs.base.classList.add('correct');
+            else inputs.base.classList.remove('correct');
+
+            if (vPast === currentVerb.past) inputs.past.classList.add('correct');
+            else inputs.past.classList.remove('correct');
+
+            if (vPP === currentVerb.pastParticiple) inputs.pp.classList.add('correct');
+            else inputs.pp.classList.remove('correct');
+
+            // Check if all correct
+            if (vBase === currentVerb.base && vPast === currentVerb.past && vPP === currentVerb.pastParticiple) {
+                handleCorrect();
+            }
+        }
+
+        function handleCorrect() {
+            // Update stats
+            stats.totalAttempts++;
+            stats.correctCount++;
+            stats.currentStreak++;
+            if (stats.currentStreak > stats.maxStreak) stats.maxStreak = stats.currentStreak;
+            saveStats();
+
+            // Glow Effect
+            quizCard.classList.add('glow-success');
+            
+            setTimeout(() => {
+                quizCard.classList.remove('glow-success');
+                initQuiz();
+            }, 600);
+        }
+
+        function saveStats() {
+            localStorage.setItem('verbStats', JSON.stringify(stats));
+            updateStatsUI();
+        }
+
+        function updateStatsUI() {
+            document.getElementById('statAttempts').textContent = stats.totalAttempts;
+            const acc = stats.totalAttempts === 0 ? 0 : Math.round((stats.correctCount / stats.totalAttempts) * 100);
+            document.getElementById('statAccuracy').textContent = acc + '%';
+            document.getElementById('statStreak').textContent = stats.currentStreak;
+            document.getElementById('statMaxStreak').textContent = stats.maxStreak;
+            
+            const weakList = document.getElementById('weakVerbsList');
+            weakList.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-dim); font-size:0.8rem;">学習を続けてデータを集めましょう</p>';
+        }
+
+        // --- UI Navigation ---
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId + 'Screen').classList.add('active');
+            
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById('nav-' + screenId).classList.add('active');
+
+            if (screenId === 'stats') updateStatsUI();
+        }
+
+        function renderVerbList() {
+            const listContainer = document.getElementById('verbList');
+            
+            // グループ化処理
+            const groups = ['AAA', 'ABA', 'ABB', 'ABC'];
+            let html = '';
+
+            groups.forEach(groupName => {
+                const groupVerbs = VERBS.filter(v => v.type === groupName);
+                if (groupVerbs.length > 0) {
+                    html += `<div class="group-header">${groupName}型</div>`;
+                    groupVerbs.forEach(v => {
+                        html += `
+                            <div class="verb-row glass-panel">
+                                <div class="info">
+                                    <span class="meaning">${v.meaning}</span>
+                                    <span class="forms">${v.base} / ${v.past} / ${v.pastParticiple}</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-right" style="color:var(--text-dim); font-size:0.8rem;"></i>
+                            </div>
+                        `;
+                    });
+                }
+            });
+
+            listContainer.innerHTML = html;
+        }
+
+        // --- Service Worker Registration ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    const CACHE_NAME = 'verb-master-v1';
+                    self.addEventListener('install', e => {
+                        e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['./'])));
+                    });
+                    self.addEventListener('fetch', e => {
+                        e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
+                    });
+                `;
+                const blob = new Blob([swCode], { type: 'text/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl);
+            });
+        }
+    </script>
+</body>
+</html>
