@@ -13,28 +13,29 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
     <style>
         :root {
-            /* パステルカラー & コンパウンド配色 (Compound Palette) */
-            --bg-primary: #f0f4f8;
+            /* パステルカラー & コンパウンド配色 */
+            --bg-primary: #0f172a;
             --accent-main: #a5b4fc; /* パステルブルー */
             --accent-sub: #fbcfe8;  /* パステルピンク */
-            --accent-highlight: #c7d2fe;
-            --text-main: #1e293b;
-            --text-dim: #64748b;
-            --success: #86efac;     /* パステルグリーン */
-            --error: #fca5a5;       /* パステルレッド */
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.5);
-            --shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        [data-theme="dark"] {
-            --bg-primary: #0f172a;
-            --glass-bg: rgba(30, 41, 59, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.1);
             --text-main: #f1f5f9;
             --text-dim: #94a3b8;
+            --success: #86efac;     /* パステルグリーン */
+            --error: #fca5a5;       /* パステルレッド */
+            --glass-bg: rgba(30, 41, 59, 0.4); /* 透明度を上げ、より曇りガラスらしく */
+            --glass-border: rgba(255, 255, 255, 0.08);
             --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            /* Liquid アニメーション用のカスタムイージング */
+            --liquid-ease: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+            --transition: all 0.5s var(--liquid-ease);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8fafc;
+            --glass-bg: rgba(255, 255, 255, 0.3);
+            --glass-border: rgba(255, 255, 255, 0.4);
+            --text-main: #1e293b;
+            --text-dim: #64748b;
+            --shadow: 0 8px 32px rgba(31, 38, 135, 0.05);
         }
 
         * {
@@ -57,10 +58,10 @@
 
         .glass-panel {
             background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            border-radius: 24px;
+            border-radius: 28px;
             box-shadow: var(--shadow);
         }
 
@@ -91,6 +92,7 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            padding-bottom: 140px;
         }
 
         .screen {
@@ -118,7 +120,6 @@
             font-size: 2.2rem;
             font-weight: 800;
             margin-bottom: 35px;
-            color: var(--text-main);
         }
 
         .input-row {
@@ -145,7 +146,7 @@
 
         .verb-input {
             width: 100%;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
             border: 2px solid var(--glass-border);
             border-radius: 16px;
             padding: 14px 18px;
@@ -158,49 +159,25 @@
 
         .verb-input:focus {
             border-color: var(--accent-main);
-            box-shadow: 0 0 0 4px rgba(165, 180, 252, 0.2);
+            box-shadow: 0 0 0 4px rgba(165, 180, 252, 0.15);
         }
 
-        .verb-input.correct {
-            border-color: var(--success);
-            background: rgba(134, 239, 172, 0.1);
-        }
-
-        .verb-input.error {
-            border-color: var(--error);
-            background: rgba(252, 165, 165, 0.1);
-        }
+        .verb-input.correct { border-color: var(--success); background: rgba(134, 239, 172, 0.1); }
+        .verb-input.error { border-color: var(--error); background: rgba(252, 165, 165, 0.1); }
+        .verb-input.disabled { opacity: 0.3; cursor: not-allowed; }
 
         .check-btn {
-            width: 52px;
-            height: 52px;
-            border-radius: 16px;
-            border: none;
-            background: var(--accent-main);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: var(--transition);
+            width: 52px; height: 52px;
+            border-radius: 16px; border: none;
+            background: var(--accent-main); color: white;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: var(--transition);
             box-shadow: 0 4px 12px rgba(165, 180, 252, 0.3);
         }
 
-        .check-btn:active {
-            transform: scale(0.95);
-        }
+        .check-btn.disabled { background: var(--text-dim); opacity: 0.4; cursor: not-allowed; }
 
-        .check-btn.disabled {
-            background: var(--text-dim);
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Animations */
-        .shake {
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-        }
-
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
         @keyframes shake {
             10%, 90% { transform: translate3d(-1px, 0, 0); }
             20%, 80% { transform: translate3d(2px, 0, 0); }
@@ -208,52 +185,50 @@
             40%, 60% { transform: translate3d(4px, 0, 0); }
         }
 
-        /* List Screen */
-        .verb-list {
-            padding-bottom: 120px;
-        }
-
-        .group-header {
-            margin: 24px 0 12px;
-            font-size: 0.9rem;
-            font-weight: 800;
-            color: var(--accent-main);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .group-header::after {
-            content: '';
-            flex: 1;
-            height: 2px;
-            background: linear-gradient(to right, var(--glass-border), transparent);
-        }
-
-        .verb-row {
-            padding: 16px 20px;
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .verb-row .info { display: flex; flex-direction: column; gap: 2px; }
-        .verb-row .meaning { font-weight: 700; color: var(--text-main); }
-        .verb-row .forms { font-size: 0.85rem; color: var(--text-dim); }
-
-        /* Navigation */
+        /* Navigation with Liquid Glass Effect */
         nav {
             position: fixed;
-            bottom: 24px;
+            bottom: 32px;
             left: 50%;
             transform: translateX(-50%);
             width: 90%;
             max-width: 400px;
             display: flex;
             padding: 8px;
-            gap: 8px;
-            z-index: 100;
+            z-index: 1000;
+            /* 強力な曇りガラス */
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        [data-theme="light"] nav {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 20px 40px rgba(31, 38, 135, 0.1);
+        }
+
+        .nav-indicator {
+            position: absolute;
+            height: calc(100% - 16px);
+            top: 8px;
+            left: 8px;
+            background: var(--accent-main);
+            border-radius: 24px;
+            transition: 
+                left 0.55s var(--liquid-ease), 
+                width 0.4s var(--liquid-ease),
+                transform 0.3s ease;
+            z-index: -1;
+            box-shadow: 0 8px 20px rgba(165, 180, 252, 0.5);
+        }
+
+        /* ぷにぷに感（Liquid）を出すための擬似アニメーション */
+        .nav-indicator.stretching {
+            transform: scaleX(1.15);
         }
 
         nav button {
@@ -261,54 +236,65 @@
             background: transparent;
             border: none;
             color: var(--text-dim);
-            padding: 12px;
-            border-radius: 18px;
+            padding: 12px 0;
             cursor: pointer;
-            font-weight: 600;
-            font-size: 0.8rem;
-            transition: var(--transition);
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: color 0.3s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 4px;
+            position: relative;
         }
 
-        nav button i { font-size: 1.2rem; }
-        nav button.active {
-            background: var(--accent-main);
-            color: white;
-            box-shadow: 0 4px 15px rgba(165, 180, 252, 0.4);
+        nav button i { 
+            font-size: 1.2rem; 
+            margin-bottom: 2px;
+            transition: transform 0.4s var(--liquid-ease);
         }
+        
+        nav button.active { color: #fff; }
+        nav button.active i { transform: translateY(-2px) scale(1.1); }
+
+        /* Stats UI */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+        .stat-item { padding: 24px 16px; text-align: center; }
+        .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--accent-main); }
+        .stat-label { font-size: 0.75rem; color: var(--text-dim); margin-top: 6px; font-weight: 600; }
+
+        .weak-verbs-list { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .weak-verb-item { padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
+        .weak-count { color: var(--error); font-weight: 800; font-size: 0.8rem; background: rgba(252, 165, 165, 0.1); padding: 4px 10px; border-radius: 12px; }
+
+        /* Group List UI */
+        .group-header {
+            margin: 28px 0 16px; font-size: 0.9rem; font-weight: 800;
+            color: var(--accent-main); display: flex; align-items: center; gap: 12px;
+            letter-spacing: 1px;
+        }
+        .group-header::after { content: ''; flex: 1; height: 1px; background: var(--glass-border); }
+        .verb-row { padding: 18px 24px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .verb-row .meaning { font-weight: 700; color: var(--text-main); margin-bottom: 2px; display: block; }
+        .verb-row .forms { font-size: 0.85rem; color: var(--text-dim); font-weight: 500; }
 
         .theme-toggle {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: var(--text-main);
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            width: 44px; height: 44px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; color: var(--text-main); transition: var(--transition);
         }
-
-        /* Stats */
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .stat-item { padding: 24px; text-align: center; }
-        .stat-value { font-size: 1.8rem; font-weight: 800; color: var(--accent-main); }
-        .stat-label { font-size: 0.8rem; color: var(--text-dim); margin-top: 4px; }
     </style>
 </head>
-<body data-theme="light">
+<body data-theme="dark">
 
     <header>
         <div class="logo">VERB MASTER</div>
-        <button class="theme-toggle" id="themeBtn"><i class="fa-solid fa-sun"></i></button>
+        <button class="theme-toggle" id="themeBtn"><i class="fa-solid fa-moon"></i></button>
     </header>
 
     <main>
-        <!-- Test Screen -->
+        <!-- Quiz -->
         <section id="quizScreen" class="screen active">
             <div class="quiz-card glass-panel" id="quizCard">
                 <div class="meaning-display" id="currentMeaning">---</div>
@@ -339,12 +325,12 @@
             </div>
         </section>
 
-        <!-- List Screen -->
+        <!-- List -->
         <section id="listScreen" class="screen">
             <div class="verb-list" id="verbList"></div>
         </section>
 
-        <!-- Stats Screen -->
+        <!-- Stats -->
         <section id="statsScreen" class="screen">
             <div class="stat-grid">
                 <div class="stat-item glass-panel">
@@ -355,11 +341,23 @@
                     <div class="stat-value" id="statAccuracy">0%</div>
                     <div class="stat-label">正答率</div>
                 </div>
+                <div class="stat-item glass-panel">
+                    <div class="stat-value" id="statCorrect">0</div>
+                    <div class="stat-label">正解数</div>
+                </div>
+                <div class="stat-item glass-panel">
+                    <div class="stat-value" id="statMiss">0</div>
+                    <div class="stat-label">ミス数</div>
+                </div>
             </div>
+            
+            <div class="group-header">間違えやすい単語</div>
+            <div class="weak-verbs-list" id="weakVerbsList"></div>
         </section>
     </main>
 
-    <nav class="glass-panel">
+    <nav>
+        <div class="nav-indicator" id="navIndicator"></div>
         <button onclick="showScreen('quiz')" id="nav-quiz" class="active"><i class="fa-solid fa-graduation-cap"></i><span>Test</span></button>
         <button onclick="showScreen('list')" id="nav-list"><i class="fa-solid fa-list-ul"></i><span>List</span></button>
         <button onclick="showScreen('stats')" id="nav-stats"><i class="fa-solid fa-chart-pie"></i><span>Stats</span></button>
@@ -367,16 +365,13 @@
 
     <script>
         const VERBS = [
-            // AAA
             { type: "AAA", base: "cut", past: "cut", pp: "cut", meaning: "切る" },
             { type: "AAA", base: "hit", past: "hit", pp: "hit", meaning: "打つ" },
             { type: "AAA", base: "put", past: "put", pp: "put", meaning: "置く" },
             { type: "AAA", base: "read", past: "read", pp: "read", meaning: "読む" },
-            // ABA
             { type: "ABA", base: "become", past: "became", pp: "become", meaning: "～になる" },
             { type: "ABA", base: "come", past: "came", pp: "come", meaning: "来る" },
             { type: "ABA", base: "run", past: "ran", pp: "run", meaning: "走る" },
-            // ABB
             { type: "ABB", base: "bring", past: "brought", pp: "brought", meaning: "持ってくる" },
             { type: "ABB", base: "build", past: "built", pp: "built", meaning: "立てる" },
             { type: "ABB", base: "buy", past: "bought", pp: "bought", meaning: "買う" },
@@ -410,7 +405,6 @@
             { type: "ABB", base: "think", past: "thought", pp: "thought", meaning: "思う" },
             { type: "ABB", base: "understand", past: "understood", pp: "understood", meaning: "理解する" },
             { type: "ABB", base: "win", past: "won", pp: "won", meaning: "勝つ" },
-            // ABC
             { type: "ABC", base: "be", past: "was", pp: "been", meaning: "～である" },
             { type: "ABC", base: "begin", past: "began", pp: "begun", meaning: "始める" },
             { type: "ABC", base: "break", past: "broke", pp: "broken", meaning: "こわす" },
@@ -445,8 +439,13 @@
 
         let currentVerb = null;
         let queue = [];
-        let stats = JSON.parse(localStorage.getItem('verbStats_v3')) || { total: 0, correct: 0 };
-        let settings = JSON.parse(localStorage.getItem('verbSettings_v3')) || { theme: 'light' };
+        let stats = JSON.parse(localStorage.getItem('verbStats_v5')) || { 
+            total: 0, 
+            correct: 0, 
+            miss: 0,
+            mistakes: {} 
+        };
+        let settings = JSON.parse(localStorage.getItem('verbSettings_v5')) || { theme: 'dark' };
 
         const els = {
             base: document.getElementById('inputBase'),
@@ -455,7 +454,7 @@
             btnPast: document.getElementById('btnPast'),
             btnPP: document.getElementById('btnPP'),
             meaning: document.getElementById('currentMeaning'),
-            quizCard: document.getElementById('quizCard')
+            indicator: document.getElementById('navIndicator')
         };
 
         window.onload = () => {
@@ -463,24 +462,23 @@
             initQuiz();
             renderList();
             updateStatsUI();
+            updateIndicator();
 
-            // Set up Enter key listeners
             [els.base, els.past, els.pp].forEach(input => {
                 input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        triggerCheck(input.id.replace('input', '').toLowerCase());
-                    }
+                    if (e.key === 'Enter') triggerCheck(input.id.replace('input', '').toLowerCase());
                 });
             });
 
             document.getElementById('themeBtn').onclick = toggleTheme;
+            window.addEventListener('resize', updateIndicator);
         };
 
         function applyTheme(t) {
             document.body.setAttribute('data-theme', t);
             document.querySelector('#themeBtn i').className = t === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
             settings.theme = t;
-            localStorage.setItem('verbSettings_v3', JSON.stringify(settings));
+            localStorage.setItem('verbSettings_v5', JSON.stringify(settings));
         }
 
         function toggleTheme() {
@@ -491,7 +489,6 @@
             if (queue.length === 0) queue = _.shuffle([...VERBS]);
             currentVerb = queue.pop();
             els.meaning.textContent = currentVerb.meaning;
-            
             resetInputs();
         }
 
@@ -502,11 +499,9 @@
                 input.disabled = true;
                 input.placeholder = "Waiting...";
             });
-
             els.base.disabled = false;
             els.base.placeholder = "Enter...";
             els.base.focus();
-
             els.btnPast.classList.add('disabled');
             els.btnPP.classList.add('disabled');
         }
@@ -518,14 +513,9 @@
             const userVal = input.value.trim().toLowerCase();
             let isCorrect = false;
 
-            // Logic check
-            if (type === 'base') {
-                isCorrect = userVal === currentVerb.base;
-            } else if (type === 'past') {
-                isCorrect = (currentVerb.base === 'be') ? (userVal === 'was' || userVal === 'were') : (userVal === currentVerb.past);
-            } else if (type === 'pp') {
-                isCorrect = (currentVerb.base === 'show') ? (userVal === 'shown' || userVal === 'showed') : (userVal === currentVerb.pp);
-            }
+            if (type === 'base') isCorrect = userVal === currentVerb.base;
+            else if (type === 'past') isCorrect = (currentVerb.base === 'be') ? (userVal === 'was' || userVal === 'were') : (userVal === currentVerb.past);
+            else if (type === 'pp') isCorrect = (currentVerb.base === 'show') ? (userVal === 'shown' || userVal === 'showed') : (userVal === currentVerb.pp);
 
             stats.total++;
             if (isCorrect) {
@@ -534,59 +524,66 @@
                 input.classList.add('correct');
                 input.disabled = true;
                 
-                // Move focus
                 if (type === 'base') {
-                    els.past.disabled = false;
-                    els.past.placeholder = "Enter...";
-                    els.btnPast.classList.remove('disabled');
-                    els.past.focus();
+                    els.past.disabled = false; els.past.placeholder = "Enter...";
+                    els.btnPast.classList.remove('disabled'); els.past.focus();
                 } else if (type === 'past') {
-                    els.pp.disabled = false;
-                    els.pp.placeholder = "Enter...";
-                    els.btnPP.classList.remove('disabled');
-                    els.pp.focus();
+                    els.pp.disabled = false; els.pp.placeholder = "Enter...";
+                    els.btnPP.classList.remove('disabled'); els.pp.focus();
                 } else if (type === 'pp') {
-                    setTimeout(() => initQuiz(), 500);
+                    setTimeout(initQuiz, 500);
                 }
             } else {
+                stats.miss++;
+                stats.mistakes[currentVerb.base] = (stats.mistakes[currentVerb.base] || 0) + 1;
                 input.classList.add('error', 'shake');
                 setTimeout(() => input.classList.remove('shake'), 400);
             }
-
             saveStats();
         }
 
         function saveStats() {
-            localStorage.setItem('verbStats_v3', JSON.stringify(stats));
+            localStorage.setItem('verbStats_v5', JSON.stringify(stats));
             updateStatsUI();
         }
 
         function updateStatsUI() {
             document.getElementById('statAttempts').textContent = stats.total;
+            document.getElementById('statCorrect').textContent = stats.correct;
+            document.getElementById('statMiss').textContent = stats.miss;
             const acc = stats.total === 0 ? 0 : Math.round((stats.correct / stats.total) * 100);
             document.getElementById('statAccuracy').textContent = acc + '%';
+
+            const list = document.getElementById('weakVerbsList');
+            const sortedMistakes = Object.entries(stats.mistakes)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            if (sortedMistakes.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-dim); font-size:0.85rem;">データ収集中...</div>';
+            } else {
+                list.innerHTML = sortedMistakes.map(([verb, count]) => `
+                    <div class="weak-verb-item glass-panel">
+                        <span>${verb}</span>
+                        <span class="weak-count">${count} ミス</span>
+                    </div>
+                `).join('');
+            }
         }
 
-        function renderList() {
-            const container = document.getElementById('verbList');
-            const types = ['AAA', 'ABA', 'ABB', 'ABC'];
-            let html = '';
-
-            types.forEach(type => {
-                const group = VERBS.filter(v => v.type === type);
-                html += `<div class="group-header">${type}型</div>`;
-                group.forEach(v => {
-                    html += `
-                        <div class="verb-row glass-panel">
-                            <div class="info">
-                                <span class="meaning">${v.meaning}</span>
-                                <span class="forms">${v.base} / ${v.past} / ${v.pp}</span>
-                            </div>
-                        </div>
-                    `;
-                });
-            });
-            container.innerHTML = html;
+        function updateIndicator() {
+            const activeBtn = document.querySelector('nav button.active');
+            if (activeBtn) {
+                // Liquidな伸びる感覚を演出するために一時的にクラスを追加
+                els.indicator.classList.add('stretching');
+                
+                els.indicator.style.width = activeBtn.offsetWidth + 'px';
+                els.indicator.style.left = activeBtn.offsetLeft + 'px';
+                
+                setTimeout(() => {
+                    els.indicator.classList.remove('stretching');
+                }, 300);
+            }
         }
 
         function showScreen(id) {
@@ -594,9 +591,29 @@
             document.getElementById(id + 'Screen').classList.add('active');
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
             document.getElementById('nav-' + id).classList.add('active');
+            
+            // タブ切り替え時にインジケーターを更新（ Liquid アニメーション発火 ）
+            updateIndicator();
+            
             if (id === 'stats') updateStatsUI();
+        }
+
+        function renderList() {
+            const container = document.getElementById('verbList');
+            const types = ['AAA', 'ABA', 'ABB', 'ABC'];
+            container.innerHTML = types.map(type => {
+                const group = VERBS.filter(v => v.type === type);
+                return `<div class="group-header">${type}型</div>` + 
+                    group.map(v => `
+                        <div class="verb-row glass-panel">
+                            <div class="info">
+                                <span class="meaning">${v.meaning}</span>
+                                <span class="forms">${v.base} / ${v.past} / ${v.pp}</span>
+                            </div>
+                        </div>
+                    `).join('');
+            }).join('');
         }
     </script>
 </body>
 </html>
-
