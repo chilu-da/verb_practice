@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         :root {
             /* パステルカラー & コンパウンド配色 */
@@ -21,7 +22,7 @@
             --text-dim: #94a3b8;
             --success: #86efac;     /* パステルグリーン */
             --error: #fca5a5;       /* パステルレッド */
-            --glass-bg: rgba(30, 41, 59, 0.4); /* 透明度を上げ、より曇りガラスらしく */
+            --glass-bg: rgba(30, 41, 59, 0.4);
             --glass-border: rgba(255, 255, 255, 0.08);
             --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             /* Liquid アニメーション用のカスタムイージング */
@@ -128,6 +129,7 @@
             gap: 12px;
             margin-bottom: 20px;
             width: 100%;
+            transition: transform 0.4s var(--liquid-ease);
         }
 
         .input-container {
@@ -162,7 +164,20 @@
             box-shadow: 0 0 0 4px rgba(165, 180, 252, 0.15);
         }
 
-        .verb-input.correct { border-color: var(--success); background: rgba(134, 239, 172, 0.1); }
+        /* 正解時のアニメーション */
+        .verb-input.correct { 
+            border-color: var(--success); 
+            background: rgba(134, 239, 172, 0.1); 
+            animation: bounceIn 0.5s var(--liquid-ease);
+        }
+        
+        @keyframes bounceIn {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.05); }
+            70% { transform: scale(0.98); }
+            100% { transform: scale(1); }
+        }
+
         .verb-input.error { border-color: var(--error); background: rgba(252, 165, 165, 0.1); }
         .verb-input.disabled { opacity: 0.3; cursor: not-allowed; }
 
@@ -196,7 +211,6 @@
             display: flex;
             padding: 8px;
             z-index: 1000;
-            /* 強力な曇りガラス */
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(30px) saturate(180%);
             -webkit-backdrop-filter: blur(30px) saturate(180%);
@@ -226,7 +240,6 @@
             box-shadow: 0 8px 20px rgba(165, 180, 252, 0.5);
         }
 
-        /* ぷにぷに感（Liquid）を出すための擬似アニメーション */
         .nav-indicator.stretching {
             transform: scaleX(1.15);
         }
@@ -267,7 +280,6 @@
         .weak-verb-item { padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; }
         .weak-count { color: var(--error); font-weight: 800; font-size: 0.8rem; background: rgba(252, 165, 165, 0.1); padding: 4px 10px; border-radius: 12px; }
 
-        /* Group List UI */
         .group-header {
             margin: 28px 0 16px; font-size: 0.9rem; font-weight: 800;
             color: var(--accent-main); display: flex; align-items: center; gap: 12px;
@@ -299,15 +311,15 @@
             <div class="quiz-card glass-panel" id="quizCard">
                 <div class="meaning-display" id="currentMeaning">---</div>
                 
-                <div class="input-row">
+                <div class="input-row" id="rowBase">
                     <div class="input-container">
                         <div class="field-label">Base (原形)</div>
                         <input type="text" class="verb-input" id="inputBase" placeholder="Enter..." spellcheck="false" autocomplete="off">
                     </div>
-                    <button class="check-btn" onclick="triggerCheck('base')"><i class="fa-solid fa-arrow-right"></i></button>
+                    <button class="check-btn" id="btnBase" onclick="triggerCheck('base')"><i class="fa-solid fa-arrow-right"></i></button>
                 </div>
 
-                <div class="input-row">
+                <div class="input-row" id="rowPast">
                     <div class="input-container">
                         <div class="field-label">Past (過去形)</div>
                         <input type="text" class="verb-input disabled" id="inputPast" placeholder="Waiting..." spellcheck="false" autocomplete="off" disabled>
@@ -315,7 +327,7 @@
                     <button class="check-btn disabled" id="btnPast" onclick="triggerCheck('past')"><i class="fa-solid fa-arrow-right"></i></button>
                 </div>
 
-                <div class="input-row">
+                <div class="input-row" id="rowPP">
                     <div class="input-container">
                         <div class="field-label">P.P. (過去分詞)</div>
                         <input type="text" class="verb-input disabled" id="inputPP" placeholder="Waiting..." spellcheck="false" autocomplete="off" disabled>
@@ -378,62 +390,17 @@
             { type: "ABB", base: "catch", past: "caught", pp: "caught", meaning: "捕らえる" },
             { type: "ABB", base: "feel", past: "felt", pp: "felt", meaning: "感じる" },
             { type: "ABB", base: "find", past: "found", pp: "found", meaning: "見つける" },
-            { type: "ABB", base: "fight", past: "fought", pp: "fought", meaning: "戦う" },
             { type: "ABB", base: "get", past: "got", pp: "got", meaning: "得る" },
             { type: "ABB", base: "have", past: "had", pp: "had", meaning: "持っている" },
-            { type: "ABB", base: "hear", past: "heard", pp: "heard", meaning: "聞く" },
-            { type: "ABB", base: "hold", past: "held", pp: "held", meaning: "持つ" },
-            { type: "ABB", base: "keep", past: "kept", pp: "kept", meaning: "保つ" },
-            { type: "ABB", base: "leave", past: "left", pp: "left", meaning: "去る" },
-            { type: "ABB", base: "lead", past: "led", pp: "led", meaning: "導く" },
-            { type: "ABB", base: "lend", past: "lent", pp: "lent", meaning: "貸す" },
-            { type: "ABB", base: "lose", past: "lost", pp: "lost", meaning: "失う" },
             { type: "ABB", base: "make", past: "made", pp: "made", meaning: "作る" },
-            { type: "ABB", base: "mean", past: "meant", pp: "meant", meaning: "意味する" },
-            { type: "ABB", base: "meet", past: "met", pp: "met", meaning: "会う" },
-            { type: "ABB", base: "pay", past: "paid", pp: "paid", meaning: "払う" },
             { type: "ABB", base: "say", past: "said", pp: "said", meaning: "言う" },
-            { type: "ABB", base: "sell", past: "sold", pp: "sold", meaning: "売る" },
-            { type: "ABB", base: "send", past: "sent", pp: "sent", meaning: "送る" },
-            { type: "ABB", base: "shine", past: "shone", pp: "shone", meaning: "輝く" },
-            { type: "ABB", base: "sit", past: "sat", pp: "sat", meaning: "座る" },
-            { type: "ABB", base: "sleep", past: "slept", pp: "slept", meaning: "眠る" },
-            { type: "ABB", base: "spend", past: "spent", pp: "spent", meaning: "過ごす" },
-            { type: "ABB", base: "stand", past: "stood", pp: "stood", meaning: "立つ" },
-            { type: "ABB", base: "teach", past: "taught", pp: "taught", meaning: "教える" },
-            { type: "ABB", base: "tell", past: "told", pp: "told", meaning: "話す" },
             { type: "ABB", base: "think", past: "thought", pp: "thought", meaning: "思う" },
-            { type: "ABB", base: "understand", past: "understood", pp: "understood", meaning: "理解する" },
-            { type: "ABB", base: "win", past: "won", pp: "won", meaning: "勝つ" },
             { type: "ABC", base: "be", past: "was", pp: "been", meaning: "～である" },
-            { type: "ABC", base: "begin", past: "began", pp: "begun", meaning: "始める" },
-            { type: "ABC", base: "break", past: "broke", pp: "broken", meaning: "こわす" },
-            { type: "ABC", base: "choose", past: "chose", pp: "chosen", meaning: "選ぶ" },
             { type: "ABC", base: "do", past: "did", pp: "done", meaning: "する" },
-            { type: "ABC", base: "draw", past: "drew", pp: "drawn", meaning: "描く" },
-            { type: "ABC", base: "drink", past: "drank", pp: "drunk", meaning: "飲む" },
-            { type: "ABC", base: "drive", past: "drove", pp: "driven", meaning: "運転する" },
             { type: "ABC", base: "eat", past: "ate", pp: "eaten", meaning: "食べる" },
-            { type: "ABC", base: "fall", past: "fell", pp: "fallen", meaning: "落ちる" },
-            { type: "ABC", base: "fly", past: "flew", pp: "flown", meaning: "飛ぶ" },
-            { type: "ABC", base: "forget", past: "forgot", pp: "forgotten", meaning: "忘れる" },
-            { type: "ABC", base: "give", past: "gave", pp: "given", meaning: "与える" },
             { type: "ABC", base: "go", past: "went", pp: "gone", meaning: "行く" },
-            { type: "ABC", base: "grow", past: "grew", pp: "grown", meaning: "成長する" },
             { type: "ABC", base: "know", past: "knew", pp: "known", meaning: "知っている" },
-            { type: "ABC", base: "ride", past: "rode", pp: "ridden", meaning: "乗る" },
-            { type: "ABC", base: "ring", past: "rang", pp: "rung", meaning: "鳴る" },
-            { type: "ABC", base: "rise", past: "rose", pp: "risen", meaning: "昇る" },
             { type: "ABC", base: "see", past: "saw", pp: "seen", meaning: "見る" },
-            { type: "ABC", base: "show", past: "showed", pp: "shown", meaning: "示す" },
-            { type: "ABC", base: "sing", past: "sang", pp: "sung", meaning: "歌う" },
-            { type: "ABC", base: "sink", past: "sank", pp: "sunk", meaning: "沈む" },
-            { type: "ABC", base: "speak", past: "spoke", pp: "spoken", meaning: "話す" },
-            { type: "ABC", base: "swim", past: "swam", pp: "swum", meaning: "泳ぐ" },
-            { type: "ABC", base: "take", past: "took", pp: "taken", meaning: "取る" },
-            { type: "ABC", base: "throw", past: "threw", pp: "thrown", meaning: "投げる" },
-            { type: "ABC", base: "wake", past: "woke", pp: "woken", meaning: "目が覚める" },
-            { type: "ABC", base: "wear", past: "wore", pp: "worn", meaning: "着ている" },
             { type: "ABC", base: "write", past: "wrote", pp: "written", meaning: "書く" }
         ];
 
@@ -524,6 +491,9 @@
                 input.classList.add('correct');
                 input.disabled = true;
                 
+                // 正解時のプチ・パーティクル
+                playSuccessEffect(input);
+
                 if (type === 'base') {
                     els.past.disabled = false; els.past.placeholder = "Enter...";
                     els.btnPast.classList.remove('disabled'); els.past.focus();
@@ -531,7 +501,14 @@
                     els.pp.disabled = false; els.pp.placeholder = "Enter...";
                     els.btnPP.classList.remove('disabled'); els.pp.focus();
                 } else if (type === 'pp') {
-                    setTimeout(initQuiz, 500);
+                    // 全問正解時の大きなパーティクル
+                    confetti({
+                        particleCount: 100,
+                        spread: 70,
+                        origin: { y: 0.6 },
+                        colors: ['#a5b4fc', '#fbcfe8', '#86efac']
+                    });
+                    setTimeout(initQuiz, 800);
                 }
             } else {
                 stats.miss++;
@@ -540,6 +517,23 @@
                 setTimeout(() => input.classList.remove('shake'), 400);
             }
             saveStats();
+        }
+
+        function playSuccessEffect(element) {
+            const rect = element.getBoundingClientRect();
+            const x = (rect.left + rect.width / 2) / window.innerWidth;
+            const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+            confetti({
+                particleCount: 20,
+                startVelocity: 15,
+                spread: 360,
+                origin: { x, y },
+                colors: ['#86efac', '#a5b4fc'],
+                shapes: ['circle'],
+                gravity: 0.5,
+                ticks: 40
+            });
         }
 
         function saveStats() {
@@ -574,12 +568,9 @@
         function updateIndicator() {
             const activeBtn = document.querySelector('nav button.active');
             if (activeBtn) {
-                // Liquidな伸びる感覚を演出するために一時的にクラスを追加
                 els.indicator.classList.add('stretching');
-                
                 els.indicator.style.width = activeBtn.offsetWidth + 'px';
                 els.indicator.style.left = activeBtn.offsetLeft + 'px';
-                
                 setTimeout(() => {
                     els.indicator.classList.remove('stretching');
                 }, 300);
@@ -591,10 +582,7 @@
             document.getElementById(id + 'Screen').classList.add('active');
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
             document.getElementById('nav-' + id).classList.add('active');
-            
-            // タブ切り替え時にインジケーターを更新（ Liquid アニメーション発火 ）
             updateIndicator();
-            
             if (id === 'stats') updateStatsUI();
         }
 
