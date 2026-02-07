@@ -846,6 +846,10 @@
                     <div class="stat-value" id="statMiss">0</div>
                     <div class="stat-label">ミス数</div>
                 </div>
+                <div class="stat-item glass-panel" style="grid-column: span 2;">
+                    <div class="stat-value" id="statAvgTime">0.0s</div>
+                    <div class="stat-label">平均解答時間</div>
+                </div>
             </div>
             <div class="group-header" style="margin-top: 40px;">間違えやすい単語</div>
             <div id="mistakeList" class="mistake-list"></div>
@@ -911,9 +915,10 @@
 
         let currentVerb = null;
         let queue = [];
-        let stats = JSON.parse(localStorage.getItem('verbStats_v9')) || { total: 0, correct: 0, miss: 0 };
+        let stats = JSON.parse(localStorage.getItem('verbStats_v9')) || { total: 0, correct: 0, miss: 0, time: 0 };
         let settings = JSON.parse(localStorage.getItem('verbSettings_v9')) || { theme: 'dark' };
         let verbMistakes = JSON.parse(localStorage.getItem('verbMistakes_v9')) || {};
+        let inputStartTime = 0;
 
         const els = {
             base: document.getElementById('inputBase'),
@@ -936,7 +941,20 @@
 
             [els.base, els.past, els.pp].forEach(input => {
                 input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') triggerCheck(input.id.replace('input', '').toLowerCase());
+                    if (e.key === 'Enter') {
+                        recordTime(); // エンターキーでも時間を記録
+                        triggerCheck(input.id.replace('input', '').toLowerCase());
+                    }
+                });
+
+                // フォーカス時に計測開始
+                input.addEventListener('focus', () => {
+                    inputStartTime = Date.now();
+                });
+
+                // フォーカス外れた時に計測終了
+                input.addEventListener('blur', () => {
+                    recordTime();
                 });
             });
 
@@ -988,6 +1006,19 @@
             els.base.focus();
             els.btnPast.classList.add('disabled');
             els.btnPP.classList.add('disabled');
+        }
+
+        function recordTime() {
+            if (inputStartTime > 0) {
+                const now = Date.now();
+                const diff = now - inputStartTime;
+                // 極端に長い時間は除外（60秒以上などは放置とみなす）
+                if (diff > 0 && diff < 60000) {
+                    stats.time = (stats.time || 0) + diff;
+                    saveStats();
+                }
+                inputStartTime = 0; // リセット
+            }
         }
 
         function checkAnswer(userVal, correctVal) {
@@ -1044,8 +1075,15 @@
             document.getElementById('statAttempts').textContent = stats.total;
             document.getElementById('statCorrect').textContent = stats.correct;
             document.getElementById('statMiss').textContent = stats.miss;
+
             const acc = stats.total === 0 ? 0 : Math.round((stats.correct / stats.total) * 100);
             document.getElementById('statAccuracy').textContent = acc + '%';
+
+            // 平均解答時間の計算
+            const avgMs = stats.total > 0 ? (stats.time || 0) / stats.total : 0;
+            const avgSec = (avgMs / 1000).toFixed(1);
+            document.getElementById('statAvgTime').textContent = avgSec + 's';
+
             renderMistakeList();
         }
 
@@ -1110,11 +1148,15 @@
 
         // スロットマシン風数字アニメーション
         function animateStatsNumbers() {
+            const avgMs = stats.total > 0 ? (stats.time || 0) / stats.total : 0;
+            const avgSec = (avgMs / 1000).toFixed(1);
+
             const statElements = [
                 { el: document.getElementById('statAttempts'), value: stats.total, suffix: '' },
                 { el: document.getElementById('statCorrect'), value: stats.correct, suffix: '' },
                 { el: document.getElementById('statMiss'), value: stats.miss, suffix: '' },
-                { el: document.getElementById('statAccuracy'), value: stats.total === 0 ? 0 : Math.round((stats.correct / stats.total) * 100), suffix: '%' }
+                { el: document.getElementById('statAccuracy'), value: stats.total === 0 ? 0 : Math.round((stats.correct / stats.total) * 100), suffix: '%' },
+                { el: document.getElementById('statAvgTime'), value: avgSec, suffix: 's', isFloat: true }
             ];
 
             const duration = 500; // 0.5秒
@@ -1126,7 +1168,12 @@
                 count++;
                 statElements.forEach(stat => {
                     // ランダムな数字を表示
-                    const randomNum = Math.floor(Math.random() * 100);
+                    let randomNum;
+                    if (stat.isFloat) {
+                        randomNum = (Math.random() * 5).toFixed(1);
+                    } else {
+                        randomNum = Math.floor(Math.random() * 100);
+                    }
                     stat.el.textContent = randomNum + stat.suffix;
                 });
 
@@ -1144,7 +1191,7 @@
         function resetStats() {
             if (!confirm('本当に統計をリセットしますか？')) return;
 
-            stats = { total: 0, correct: 0, miss: 0 };
+            stats = { total: 0, correct: 0, miss: 0, time: 0 };
             verbMistakes = {};
             localStorage.setItem('verbStats_v9', JSON.stringify(stats));
             localStorage.setItem('verbMistakes_v9', JSON.stringify(verbMistakes));
