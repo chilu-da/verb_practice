@@ -85,6 +85,7 @@
             font-size: 1.5rem;
             background: linear-gradient(45deg, var(--accent-main), var(--accent-sub), var(--accent-main));
             background-size: 200% 200%;
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.5px;
@@ -330,11 +331,48 @@
         }
 
         .verb-row .meaning {
+            font-size: 0.9rem;
+            color: var(--text-dim);
             font-weight: 700;
+        }
+
+        /* Search Bar */
+        .search-container {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            background: var(--glass-bg);
             color: var(--text-main);
-            margin-bottom: 3px;
-            display: block;
-            font-size: 1.1rem;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            box-shadow: 0 0 0 2px var(--accent-main);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+            pointer-events: none;
+        }
+
+        .no-results {
+            text-align: center;
+            color: var(--text-dim);
+            padding: 40px;
+            font-size: 0.9rem;
         }
 
         .verb-row .forms {
@@ -431,6 +469,7 @@
             margin-bottom: 55px;
             background: linear-gradient(135deg, var(--accent-main), var(--accent-sub), var(--accent-main));
             background-size: 200% 200%;
+            background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 5px 15px rgba(165, 180, 252, 0.4));
@@ -824,6 +863,10 @@
 
         <!-- List Section -->
         <section id="listScreen" class="screen">
+            <div class="search-container">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search (英語/日本語)...">
+            </div>
             <div class="verb-list" id="verbList"></div>
         </section>
 
@@ -894,22 +937,79 @@
 
     <script>
         const VERBS = [
+            // AAA型
             { type: "AAA", base: "cut", past: "cut", pp: "cut", meaning: "切る" },
             { type: "AAA", base: "hit", past: "hit", pp: "hit", meaning: "打つ" },
             { type: "AAA", base: "put", past: "put", pp: "put", meaning: "置く" },
-            { type: "AAA", base: "read", past: "read", pp: "read", meaning: "読む" },
+            // ABA型
             { type: "ABA", base: "become", past: "became", pp: "become", meaning: "～になる" },
             { type: "ABA", base: "come", past: "came", pp: "come", meaning: "来る" },
             { type: "ABA", base: "run", past: "ran", pp: "run", meaning: "走る" },
+            // ABB型
+            { type: "ABB", base: "bring", past: "brought", pp: "brought", meaning: "持ってくる" },
             { type: "ABB", base: "build", past: "built", pp: "built", meaning: "建てる" },
             { type: "ABB", base: "buy", past: "bought", pp: "bought", meaning: "買う" },
-            { type: "ABB", base: "get", past: "got", pp: ["got", "gotten"], meaning: "得る" },
+            { type: "ABB", base: "catch", past: "caught", pp: "caught", meaning: "捕らえる" },
+            { type: "ABB", base: "feel", past: "felt", pp: "felt", meaning: "感じる" },
+            { type: "ABB", base: "find", past: "found", pp: "found", meaning: "見つける" },
+            { type: "ABB", base: "fight", past: "fought", pp: "fought", meaning: "戦う" },
+            { type: "ABB", base: "get", past: "got", pp: "got", meaning: "得る" },
+            { type: "ABB", base: "have", past: "had", pp: "had", meaning: "持っている" },
+            { type: "ABB", base: "hear", past: "heard", pp: "heard", meaning: "聞く" },
+            { type: "ABB", base: "hold", past: "held", pp: "held", meaning: "持つ" },
+            { type: "ABB", base: "keep", past: "kept", pp: "kept", meaning: "保つ" },
+            { type: "ABB", base: "leave", past: "left", pp: "left", meaning: "去る" },
+            { type: "ABB", base: "lead", past: "led", pp: "led", meaning: "導く" },
+            { type: "ABB", base: "lend", past: "lent", pp: "lent", meaning: "貸す" },
+            { type: "ABB", base: "lose", past: "lost", pp: "lost", meaning: "失う" },
             { type: "ABB", base: "make", past: "made", pp: "made", meaning: "作る" },
+            { type: "ABB", base: "mean", past: "meant", pp: "meant", meaning: "意味する" },
+            { type: "ABB", base: "meet", past: "met", pp: "met", meaning: "会う" },
+            { type: "ABB", base: "pay", past: "paid", pp: "paid", meaning: "払う" },
+            { type: "ABB", base: "read", past: "read", pp: "read", meaning: "読む" },
+            { type: "ABB", base: "say", past: "said", pp: "said", meaning: "言う" },
+            { type: "ABB", base: "sell", past: "sold", pp: "sold", meaning: "売る" },
+            { type: "ABB", base: "send", past: "sent", pp: "sent", meaning: "送る" },
+            { type: "ABB", base: "shine", past: "shone", pp: "shone", meaning: "輝く" },
+            { type: "ABB", base: "sit", past: "sat", pp: "sat", meaning: "座る" },
+            { type: "ABB", base: "sleep", past: "slept", pp: "slept", meaning: "眠る" },
+            { type: "ABB", base: "spend", past: "spent", pp: "spent", meaning: "過ごす" },
+            { type: "ABB", base: "stand", past: "stood", pp: "stood", meaning: "立つ" },
+            { type: "ABB", base: "teach", past: "taught", pp: "taught", meaning: "教える" },
+            { type: "ABB", base: "tell", past: "told", pp: "told", meaning: "話す" },
+            { type: "ABB", base: "think", past: "thought", pp: "thought", meaning: "思う" },
+            { type: "ABB", base: "understand", past: "understood", pp: "understood", meaning: "理解する" },
+            { type: "ABB", base: "win", past: "won", pp: "won", meaning: "勝つ" },
+            // ABC型
             { type: "ABC", base: "be", past: ["was", "were"], pp: "been", meaning: "～である" },
+            { type: "ABC", base: "begin", past: "began", pp: "begun", meaning: "始める" },
+            { type: "ABC", base: "break", past: "broke", pp: "broken", meaning: "こわす" },
+            { type: "ABC", base: "choose", past: "chose", pp: "chosen", meaning: "選ぶ" },
             { type: "ABC", base: "do", past: "did", pp: "done", meaning: "する" },
+            { type: "ABC", base: "draw", past: "drew", pp: "drawn", meaning: "描く" },
+            { type: "ABC", base: "drink", past: "drank", pp: "drunk", meaning: "飲む" },
+            { type: "ABC", base: "drive", past: "drove", pp: "driven", meaning: "運転する" },
             { type: "ABC", base: "eat", past: "ate", pp: "eaten", meaning: "食べる" },
+            { type: "ABC", base: "fall", past: "fell", pp: "fallen", meaning: "落ちる" },
+            { type: "ABC", base: "fly", past: "flew", pp: "flown", meaning: "飛ぶ" },
+            { type: "ABC", base: "forget", past: "forgot", pp: "forgotten", meaning: "忘れる" },
+            { type: "ABC", base: "give", past: "gave", pp: "given", meaning: "与える" },
             { type: "ABC", base: "go", past: "went", pp: "gone", meaning: "行く" },
+            { type: "ABC", base: "grow", past: "grew", pp: "grown", meaning: "成長する" },
+            { type: "ABC", base: "know", past: "knew", pp: "known", meaning: "知っている" },
+            { type: "ABC", base: "ride", past: "rode", pp: "ridden", meaning: "乗る" },
+            { type: "ABC", base: "ring", past: "rang", pp: "rung", meaning: "鳴る" },
+            { type: "ABC", base: "rise", past: "rose", pp: "risen", meaning: "昇る" },
             { type: "ABC", base: "see", past: "saw", pp: "seen", meaning: "見る" },
+            { type: "ABC", base: "show", past: "showed", pp: ["shown", "showed"], meaning: "示す" },
+            { type: "ABC", base: "sing", past: "sang", pp: "sung", meaning: "歌う" },
+            { type: "ABC", base: "sink", past: "sank", pp: "sunk", meaning: "沈む" },
+            { type: "ABC", base: "speak", past: "spoke", pp: "spoken", meaning: "話す" },
+            { type: "ABC", base: "swim", past: "swam", pp: "swum", meaning: "泳ぐ" },
+            { type: "ABC", base: "take", past: "took", pp: "taken", meaning: "取る" },
+            { type: "ABC", base: "throw", past: "threw", pp: "thrown", meaning: "投げる" },
+            { type: "ABC", base: "wake", past: "woke", pp: "woken", meaning: "目が覚める" },
+            { type: "ABC", base: "wear", past: "wore", pp: "worn", meaning: "着ている" },
             { type: "ABC", base: "write", past: "wrote", pp: "written", meaning: "書く" }
         ];
 
@@ -960,6 +1060,11 @@
 
             document.getElementById('themeBtn').onclick = toggleTheme;
             window.addEventListener('resize', updateIndicator);
+
+            // 検索機能のイベントリスナー
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                renderList(e.target.value);
+            });
         };
 
         function applyTheme(t) {
@@ -1095,7 +1200,7 @@
                 .sort((a, b) => b[1] - a[1]);
 
             if (sorted.length === 0) {
-                container.innerHTML = '<div class="no-mistakes glass-panel">まだ間違いはありません 🎉</div>';
+                container.innerHTML = '<div class="no-mistakes glass-panel">まだ間違いはありません </div>';
                 return;
             }
 
@@ -1204,21 +1309,59 @@
             confetti({ particleCount: 100, spread: 100, origin: { y: 0.6 }, colors: ['#a5b4fc', '#fbcfe8', '#86efac'] });
         }
 
-        function renderList() {
+        function renderList(filterText = '') {
             const container = document.getElementById('verbList');
             const types = ['AAA', 'ABA', 'ABB', 'ABC'];
-            container.innerHTML = types.map(type => {
-                const group = VERBS.filter(v => v.type === type);
-                return `<div class="group-header">${type}型</div>` +
-                    group.map(v => `
-                        <div class="verb-row glass-panel" onclick="openModal('${v.base}')">
-                            <div class="info">
-                                <span class="meaning">${v.meaning}</span>
-                                <span class="forms">${v.base} / ${Array.isArray(v.past) ? v.past.join(', ') : v.past} / ${Array.isArray(v.pp) ? v.pp.join(', ') : v.pp}</span>
+            const lowerFilter = filterText.toLowerCase().trim();
+
+            let htmlContent = '';
+            let hasResults = false;
+
+            types.forEach(type => {
+                // フィルタリングロジック
+                const group = VERBS.filter(v => {
+                    if (!lowerFilter) return v.type === type;
+
+                    const matchBase = v.base.toLowerCase().includes(lowerFilter);
+                    const matchPast = Array.isArray(v.past)
+                        ? v.past.some(p => p.toLowerCase().includes(lowerFilter))
+                        : v.past.toLowerCase().includes(lowerFilter);
+                    const matchPP = Array.isArray(v.pp)
+                        ? v.pp.some(p => p.toLowerCase().includes(lowerFilter))
+                        : v.pp.toLowerCase().includes(lowerFilter);
+                    const matchMeaning = v.meaning.includes(lowerFilter);
+
+                    return v.type === type && (matchBase || matchPast || matchPP || matchMeaning);
+                });
+
+                if (group.length > 0) {
+                    hasResults = true;
+                    htmlContent += `<div class="group-header">${type} Type</div>`;
+                    group.forEach(verb => {
+                        const pastDisplay = Array.isArray(verb.past) ? verb.past.join('/') : verb.past;
+                        const ppDisplay = Array.isArray(verb.pp) ? verb.pp.join('/') : verb.pp;
+
+                        // アニメーション用の遅延設定
+                        htmlContent += `
+                            <div class="verb-row glass-panel" onclick="openModal('${verb.base}')">
+                                <div>
+                                    <div style="font-weight:800; font-size:1.1rem; color:var(--accent-main);">${verb.base}</div>
+                                    <div style="font-size:0.85rem; color:var(--text-dim); margin-top:4px;">
+                                        Past: ${pastDisplay} / PP: ${ppDisplay}
+                                    </div>
+                                </div>
+                                <div class="meaning">${verb.meaning}</div>
                             </div>
-                        </div>
-                    `).join('');
-            }).join('');
+                        `;
+                    });
+                }
+            });
+
+            if (!hasResults) {
+                htmlContent = '<div class="no-results">見つかりませんでした </div>';
+            }
+
+            container.innerHTML = htmlContent;
         }
 
         function openModal(baseVerb) {
