@@ -30,7 +30,8 @@
             --ease-expo-out: cubic-bezier(0.19, 1, 0.22, 1);
             --ease-expo-in: cubic-bezier(0.95, 0.05, 0.795, 0.035);
             --liquid-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            --tab-speed: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --liquid-ease: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+            --tab-speed: 0.175s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         [data-theme="light"] {
@@ -82,10 +83,24 @@
         .logo {
             font-weight: 800;
             font-size: 1.5rem;
-            background: linear-gradient(45deg, var(--accent-main), var(--accent-sub));
+            background: linear-gradient(45deg, var(--accent-main), var(--accent-sub), var(--accent-main));
+            background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             letter-spacing: -0.5px;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
         }
 
         main {
@@ -102,21 +117,24 @@
 
         .screen {
             display: none;
+            opacity: 0;
         }
 
         .screen.active {
             display: flex;
             flex-direction: column;
-            animation: screenFadeIn 0.3s ease-out forwards;
+            animation: screenFadeIn 0.5s var(--liquid-ease) forwards;
         }
 
         @keyframes screenFadeIn {
             from {
                 opacity: 0;
+                transform: translateY(8px);
             }
 
             to {
                 opacity: 1;
+                transform: translateY(0);
             }
         }
 
@@ -124,12 +142,38 @@
         .quiz-card {
             padding: 45px 28px;
             text-align: center;
+            animation: cardFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes cardFloat {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
         }
 
         .meaning-display {
             font-size: 2.4rem;
             font-weight: 800;
             margin-bottom: 40px;
+            animation: meaningPop 0.5s var(--liquid-bounce);
+        }
+
+        @keyframes meaningPop {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .input-row {
@@ -211,17 +255,30 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: transform 0.2s ease, opacity 0.2s ease;
+            transition: transform 0.3s var(--liquid-ease), box-shadow 0.3s ease;
         }
 
-        .check-btn:active {
-            transform: scale(0.9);
+        .check-btn:hover:not(.disabled) {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 8px 25px rgba(165, 180, 252, 0.5);
+        }
+
+        .check-btn:active:not(.disabled) {
+            transform: scale(0.9) rotate(-5deg);
         }
 
         .check-btn.disabled {
             background: var(--text-dim);
             opacity: 0.3;
             cursor: not-allowed;
+        }
+
+        .check-btn i {
+            transition: transform 0.3s var(--liquid-ease);
+        }
+
+        .check-btn:hover:not(.disabled) i {
+            transform: translateX(3px);
         }
 
         .shake {
@@ -260,11 +317,16 @@
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            transition: opacity 0.2s ease;
+            transition: transform 0.3s var(--liquid-ease), box-shadow 0.3s ease;
+        }
+
+        .verb-row:hover {
+            transform: translateX(8px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
         .verb-row:active {
-            opacity: 0.6;
+            transform: scale(0.98);
         }
 
         .verb-row .meaning {
@@ -356,17 +418,23 @@
 
         .modal-close:hover {
             background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        .modal-close:active {
+            transform: scale(0.9) rotate(180deg);
         }
 
         .modal-meaning {
             font-size: 3rem;
             font-weight: 800;
             margin-bottom: 55px;
-            background: linear-gradient(135deg, var(--accent-main), var(--accent-sub));
+            background: linear-gradient(135deg, var(--accent-main), var(--accent-sub), var(--accent-main));
+            background-size: 200% 200%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 5px 15px rgba(165, 180, 252, 0.4));
+            animation: gradientShift 3s ease infinite;
         }
 
         .modal-grid {
@@ -379,6 +447,31 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            animation: cellSlideUp 0.6s var(--liquid-bounce) backwards;
+        }
+
+        .modal-cell:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .modal-cell:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .modal-cell:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes cellSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .modal-label {
@@ -397,6 +490,12 @@
             padding: 24px 4px;
             border-radius: 28px;
             border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: transform 0.3s var(--liquid-ease), box-shadow 0.3s ease;
+        }
+
+        .modal-value:hover {
+            transform: scale(1.08) translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         }
 
         /* Navigation */
@@ -406,39 +505,49 @@
             left: 50%;
             transform: translateX(-50%);
             width: 90%;
-            max-width: 420px;
+            max-width: 400px;
             display: flex;
             padding: 8px;
             z-index: 1000;
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(35px) saturate(180%);
-            -webkit-backdrop-filter: blur(35px) saturate(180%);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 35px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+            border-radius: 32px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
 
+        /* アニメーションするインジケーター */
         .nav-indicator {
             position: absolute;
             height: calc(100% - 16px);
             top: 8px;
             left: 8px;
             background: var(--accent-main);
-            border-radius: 26px;
-            transition: left var(--tab-speed), width var(--tab-speed);
+            border-radius: 24px;
+            transition:
+                left 0.45s var(--liquid-ease),
+                width 0.75s var(--liquid-ease),
+                transform 0.3s ease;
             z-index: -1;
-            box-shadow: 0 10px 25px rgba(165, 180, 252, 0.5);
+            box-shadow: 0 8px 20px rgba(165, 180, 252, 0.5);
         }
 
+        .nav-indicator.stretching {
+            transform: scaleX(1.15);
+        }
+
+        /* ナビボタン */
         nav button {
             flex: 1;
             background: transparent;
             border: none;
             color: var(--text-dim);
-            padding: 14px 0;
+            padding: 12px 0;
             cursor: pointer;
-            font-weight: 800;
-            font-size: 0.8rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: color 0.3s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -447,12 +556,17 @@
         }
 
         nav button i {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             margin-bottom: 2px;
+            transition: transform 0.4s var(--liquid-ease);
         }
 
         nav button.active {
             color: #fff;
+        }
+
+        nav button.active i {
+            transform: translateY(-2px) scale(1.1);
         }
 
         .group-header {
@@ -485,7 +599,24 @@
             justify-content: center;
             cursor: pointer;
             color: var(--text-main);
-            transition: all 0.3s ease;
+            transition: all 0.4s var(--liquid-ease);
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(15deg) scale(1.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-toggle:active {
+            transform: rotate(-15deg) scale(0.9);
+        }
+
+        .theme-toggle i {
+            transition: transform 0.5s var(--liquid-ease);
+        }
+
+        .theme-toggle:hover i {
+            transform: rotate(360deg);
         }
 
         /* Stats */
@@ -498,12 +629,23 @@
         .stat-item {
             padding: 30px 18px;
             text-align: center;
+            transition: transform 0.3s var(--liquid-ease), box-shadow 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px) scale(1.03);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
         }
 
         .stat-value {
             font-size: 2rem;
             font-weight: 800;
             color: var(--accent-main);
+            transition: transform 0.3s var(--liquid-ease);
+        }
+
+        .stat-item:hover .stat-value {
+            transform: scale(1.15);
         }
 
         .stat-label {
@@ -526,6 +668,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: transform 0.3s var(--liquid-ease), box-shadow 0.3s ease;
+        }
+
+        .mistake-item:hover {
+            transform: translateX(8px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
         .mistake-info {
@@ -552,6 +700,19 @@
             border-radius: 20px;
             font-weight: 800;
             font-size: 0.85rem;
+            animation: pulseCount 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseCount {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
         }
 
         .no-mistakes {
@@ -559,6 +720,59 @@
             text-align: center;
             color: var(--text-dim);
             font-size: 0.9rem;
+            animation: celebrateBounce 1s var(--liquid-bounce);
+        }
+
+        @keyframes celebrateBounce {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Reset Button */
+        .reset-btn {
+            margin-top: 40px;
+            width: 100%;
+            padding: 18px 24px;
+            border: none;
+            border-radius: 20px;
+            background: linear-gradient(135deg, var(--error), #f87171);
+            color: white;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: transform 0.3s var(--liquid-ease), box-shadow 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            transform: scale(1.03);
+            box-shadow: 0 10px 30px rgba(252, 165, 165, 0.4);
+        }
+
+        .reset-btn:active {
+            transform: scale(0.97);
+        }
+
+        .reset-btn i {
+            transition: transform 0.4s var(--liquid-ease);
+        }
+
+        .reset-btn:hover i {
+            transform: rotate(-360deg);
         }
     </style>
 </head>
@@ -635,6 +849,10 @@
             </div>
             <div class="group-header" style="margin-top: 40px;">間違えやすい単語</div>
             <div id="mistakeList" class="mistake-list"></div>
+            <button class="reset-btn" onclick="resetStats()">
+                <i class="fa-solid fa-rotate-left"></i>
+                統計をリセット
+            </button>
         </section>
     </main>
 
@@ -858,20 +1076,85 @@
             }).join('');
         }
 
+        // インジケーターの位置を更新
         function updateIndicator() {
             const activeBtn = document.querySelector('nav button.active');
             if (activeBtn) {
+                els.indicator.classList.add('stretching');
                 els.indicator.style.width = activeBtn.offsetWidth + 'px';
                 els.indicator.style.left = activeBtn.offsetLeft + 'px';
+                setTimeout(() => {
+                    els.indicator.classList.remove('stretching');
+                }, 300);
             }
         }
 
+        // 画面切り替え
         function showScreen(id) {
+            // 全画面を非表示
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            // 指定画面を表示
             document.getElementById(id + 'Screen').classList.add('active');
+
+            // ボタンのアクティブ状態を更新
             document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
             document.getElementById('nav-' + id).classList.add('active');
+
             updateIndicator();
+
+            // 統計タブに移動したらスロットアニメーション
+            if (id === 'stats') {
+                animateStatsNumbers();
+            }
+        }
+
+        // スロットマシン風数字アニメーション
+        function animateStatsNumbers() {
+            const statElements = [
+                { el: document.getElementById('statAttempts'), value: stats.total, suffix: '' },
+                { el: document.getElementById('statCorrect'), value: stats.correct, suffix: '' },
+                { el: document.getElementById('statMiss'), value: stats.miss, suffix: '' },
+                { el: document.getElementById('statAccuracy'), value: stats.total === 0 ? 0 : Math.round((stats.correct / stats.total) * 100), suffix: '%' }
+            ];
+
+            const duration = 500; // 0.5秒
+            const interval = 50; // 0.05秒ごとに更新
+            const iterations = duration / interval;
+            let count = 0;
+
+            const animationInterval = setInterval(() => {
+                count++;
+                statElements.forEach(stat => {
+                    // ランダムな数字を表示
+                    const randomNum = Math.floor(Math.random() * 100);
+                    stat.el.textContent = randomNum + stat.suffix;
+                });
+
+                if (count >= iterations) {
+                    clearInterval(animationInterval);
+                    // 最終的に正しい値を表示
+                    statElements.forEach(stat => {
+                        stat.el.textContent = stat.value + stat.suffix;
+                    });
+                }
+            }, interval);
+        }
+
+        // 統計リセット
+        function resetStats() {
+            if (!confirm('本当に統計をリセットしますか？')) return;
+
+            stats = { total: 0, correct: 0, miss: 0 };
+            verbMistakes = {};
+            localStorage.setItem('verbStats_v9', JSON.stringify(stats));
+            localStorage.setItem('verbMistakes_v9', JSON.stringify(verbMistakes));
+
+            // アニメーション付きで更新
+            animateStatsNumbers();
+            renderMistakeList();
+
+            // リセット成功の紙吹雪
+            confetti({ particleCount: 100, spread: 100, origin: { y: 0.6 }, colors: ['#a5b4fc', '#fbcfe8', '#86efac'] });
         }
 
         function renderList() {
@@ -900,7 +1183,17 @@
             document.getElementById('modalPast').textContent = Array.isArray(v.past) ? v.past.join(' / ') : v.past;
             document.getElementById('modalPP').textContent = Array.isArray(v.pp) ? v.pp.join(' / ') : v.pp;
 
-            els.modal.classList.remove('closing');
+            // 確実にscale(0)からスタートさせるためリセット
+            els.modal.classList.remove('closing', 'active');
+            els.modalCard.style.transform = 'scale(0)';
+            els.modalCard.style.opacity = '0';
+
+            // リフローを強制してからアニメーション開始
+            void els.modalCard.offsetWidth;
+
+            // インラインスタイルを削除してCSSに任せる
+            els.modalCard.style.transform = '';
+            els.modalCard.style.opacity = '';
             els.modal.classList.add('active');
         }
 
