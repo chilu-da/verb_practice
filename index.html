@@ -5,12 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Irregular Verbs Master</title>
-    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
@@ -164,6 +162,42 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+
+        /* Mode Selector */
+        .mode-selector {
+            padding: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .mode-selector::-webkit-scrollbar {
+            display: none;
+        }
+
+        .mode-btn {
+            padding: 10px 18px;
+            border-radius: 18px;
+            border: 1px solid var(--glass-border);
+            background: transparent;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s var(--liquid-ease);
+        }
+
+        .mode-btn.active {
+            background: var(--accent-main);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 8px 20px rgba(165, 180, 252, 0.4);
+            transform: translateY(-2px);
         }
 
         /* Quiz UI */
@@ -339,13 +373,14 @@
 
         /* List Screen */
         .verb-row {
-            padding: 20px 28px;
+            padding: 16px 20px;
             margin-bottom: 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
             transition: transform 0.3s var(--liquid-ease), box-shadow 0.3s ease;
+            position: relative;
         }
 
         .verb-row:hover {
@@ -361,6 +396,20 @@
             font-size: 0.9rem;
             color: var(--text-dim);
             font-weight: 700;
+        }
+
+        .check-toggle {
+            margin-right: 15px;
+            color: var(--text-dim);
+            font-size: 1.2rem;
+            transition: all 0.3s var(--liquid-bounce);
+            cursor: pointer;
+        }
+
+        .check-toggle.checked {
+            color: var(--accent-sub);
+            transform: scale(1.2) rotate(360deg);
+            text-shadow: 0 0 10px var(--accent-sub);
         }
 
         /* Search Bar */
@@ -842,7 +891,6 @@
         }
     </style>
 </head>
-<!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-FEQNPVE62W"></script>
 <script>
     window.dataLayer = window.dataLayer || [];
@@ -863,8 +911,16 @@
     </header>
 
     <main>
-        <!-- Quiz Section -->
         <section id="quizScreen" class="screen active">
+            <div class="mode-selector glass-panel">
+                <button onclick="setQuizMode('random')" class="mode-btn active" data-mode="random">Random</button>
+                <button onclick="setQuizMode('checked')" class="mode-btn" data-mode="checked"><i class="fa-solid fa-star"></i></button>
+                <button onclick="setQuizMode('AAA')" class="mode-btn" data-mode="AAA">AAA</button>
+                <button onclick="setQuizMode('ABA')" class="mode-btn" data-mode="ABA">ABA</button>
+                <button onclick="setQuizMode('ABB')" class="mode-btn" data-mode="ABB">ABB</button>
+                <button onclick="setQuizMode('ABC')" class="mode-btn" data-mode="ABC">ABC</button>
+            </div>
+
             <div class="quiz-card glass-panel" id="quizCard">
                 <div class="meaning-display" id="currentMeaning">---</div>
 
@@ -900,7 +956,6 @@
             </div>
         </section>
 
-        <!-- List Section -->
         <section id="listScreen" class="screen">
             <div class="search-container">
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
@@ -909,7 +964,6 @@
             <div class="verb-list" id="verbList"></div>
         </section>
 
-        <!-- Stats Section -->
         <section id="statsScreen" class="screen">
             <div class="stat-grid">
                 <div class="stat-item glass-panel">
@@ -942,7 +996,6 @@
         </section>
     </main>
 
-    <!-- Detail Modal -->
     <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
         <div class="modal-card" id="modalCard" onclick="event.stopPropagation()">
             <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
@@ -964,7 +1017,6 @@
         </div>
     </div>
 
-    <!-- Tab Navigation -->
     <nav>
         <div class="nav-indicator" id="navIndicator"></div>
         <button onclick="showScreen('quiz')" id="nav-quiz" class="active"><i
@@ -1054,9 +1106,11 @@
 
         let currentVerb = null;
         let queue = [];
+        let quizMode = 'random'; // 追加
         let stats = JSON.parse(localStorage.getItem('verbStats_v9')) || { total: 0, correct: 0, miss: 0, time: 0 };
         let settings = JSON.parse(localStorage.getItem('verbSettings_v9')) || { theme: 'dark' };
         let verbMistakes = JSON.parse(localStorage.getItem('verbMistakes_v9')) || {};
+        let checkedVerbs = JSON.parse(localStorage.getItem('checkedVerbs_v9')) || {}; // 追加
         let inputStartTime = 0;
 
         const els = {
@@ -1117,17 +1171,51 @@
             applyTheme(settings.theme === 'dark' ? 'light' : 'dark');
         }
 
+        // クイズモードの設定
+        function setQuizMode(mode) {
+            quizMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+            queue = []; // キューをリセット
+            initQuiz();
+        }
+
         function initQuiz() {
-            if (queue.length === 0) queue = buildWeightedQueue();
+            if (queue.length === 0) {
+                queue = buildWeightedQueue();
+                if (queue.length === 0) {
+                    // 対象がない場合
+                    if (quizMode === 'checked') {
+                        els.meaning.innerHTML = '<span style="font-size:1.2rem; color:var(--text-dim);">Listでスターを付けた単語がありません</span>';
+                    } else {
+                        els.meaning.textContent = "対象がありません";
+                    }
+                    resetInputs();
+                    [els.base, els.past, els.pp].forEach(i => i.disabled = true);
+                    return;
+                }
+            }
             currentVerb = queue.pop();
             els.meaning.textContent = currentVerb.meaning;
             resetInputs();
         }
 
         function buildWeightedQueue() {
+            let filtered = VERBS;
+            
+            // モードによるフィルタリング
+            if (quizMode === 'checked') {
+                filtered = VERBS.filter(v => checkedVerbs[v.base]);
+            } else if (['AAA', 'ABA', 'ABB', 'ABC'].includes(quizMode)) {
+                filtered = VERBS.filter(v => v.type === quizMode);
+            }
+
+            if (filtered.length === 0) return [];
+
             // ミス数に基づいて重み付きキューを作成
             let weighted = [];
-            VERBS.forEach(v => {
+            filtered.forEach(v => {
                 const mistakes = verbMistakes[v.base] || 0;
                 // 基本1回 + ミス数に応じて追加（最大5回まで）
                 const count = 1 + Math.min(mistakes, 4);
@@ -1147,7 +1235,7 @@
             });
             els.base.disabled = false;
             els.base.placeholder = "Enter...";
-            els.base.focus();
+            if(queue.length > 0 || currentVerb) els.base.focus();
             els.btnPast.classList.add('disabled');
             els.btnPP.classList.add('disabled');
         }
@@ -1213,6 +1301,20 @@
             localStorage.setItem('verbStats_v9', JSON.stringify(stats));
             localStorage.setItem('verbMistakes_v9', JSON.stringify(verbMistakes));
             updateStatsUI();
+        }
+
+        // チェック状態の切り替え
+        function toggleVerbCheck(e, base) {
+            e.stopPropagation();
+            checkedVerbs[base] = !checkedVerbs[base];
+            localStorage.setItem('checkedVerbs_v9', JSON.stringify(checkedVerbs));
+            
+            const icon = e.currentTarget.querySelector('i');
+            e.currentTarget.classList.toggle('checked', checkedVerbs[base]);
+            icon.className = checkedVerbs[base] ? 'fa-solid fa-star' : 'fa-regular fa-star';
+            
+            // チェックモードのキューに影響するため、必要ならキューを更新
+            if (quizMode === 'checked') queue = [];
         }
 
         function updateStatsUI() {
@@ -1284,10 +1386,9 @@
 
             updateIndicator();
 
-            // 統計タブに移動したらスロットアニメーション
-            if (id === 'stats') {
-                animateStatsNumbers();
-            }
+            if (id === 'quiz') initQuiz();
+            if (id === 'list') renderList();
+            if (id === 'stats') animateStatsNumbers();
         }
 
         // スロットマシン風数字アニメーション
@@ -1379,14 +1480,20 @@
                     group.forEach(verb => {
                         const pastDisplay = Array.isArray(verb.past) ? verb.past.join('/') : verb.past;
                         const ppDisplay = Array.isArray(verb.pp) ? verb.pp.join('/') : verb.pp;
+                        const isChecked = checkedVerbs[verb.base] ? 'checked' : '';
+                        const starIcon = checkedVerbs[verb.base] ? 'fa-solid fa-star' : 'fa-regular fa-star';
 
-                        // アニメーション用の遅延設定
                         htmlContent += `
                             <div class="verb-row glass-panel" onclick="openModal('${verb.base}')">
-                                <div>
-                                    <div style="font-weight:800; font-size:1.1rem; color:var(--accent-main);">${verb.base}</div>
-                                    <div style="font-size:0.85rem; color:var(--text-dim); margin-top:4px;">
-                                        Past: ${pastDisplay} / PP: ${ppDisplay}
+                                <div style="display:flex; align-items:center;">
+                                    <div class="check-toggle ${isChecked}" onclick="toggleVerbCheck(event, '${verb.base}')">
+                                        <i class="${starIcon}"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight:800; font-size:1.1rem; color:var(--accent-main);">${verb.base}</div>
+                                        <div style="font-size:0.85rem; color:var(--text-dim); margin-top:4px;">
+                                            Past: ${pastDisplay} / PP: ${ppDisplay}
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="meaning">${verb.meaning}</div>
